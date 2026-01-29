@@ -1,11 +1,20 @@
 import dotenv from "dotenv"
-import app from './app.js'
+import app from "./app.js"
+import connectDb from "./db/index.js"
+
 dotenv.config({
-    path:"./.env"
+    path: "./.env"
 });
 
-const port =process.env.PORT || 3000
+const port = process.env.PORT || 3000
 
-app.listen(port,()=>{
-    console.log(`Sever is listening on port: ${port}`)
+connectDb().then(() => {
+    app.listen(port, () => {
+        console.log(`Sever is listening on port: ${port}`)
+    })
+}).catch((error) => {
+    console.error("Mongo connection error", error)
+    process.exit(1)
 })
+
+
