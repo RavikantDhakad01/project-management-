@@ -6,4 +6,4 @@ class Response {
         this.sucess=statusCode<400
     }
 }
-export {Response}
+export  default Response
