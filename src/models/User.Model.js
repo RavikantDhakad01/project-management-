@@ -58,7 +58,7 @@ const userSchema = new Schema({
     forgotPasswordExpiry: {
         type: Date
     },
-    emailVerificatonToken: {
+    emailVerificationToken: {
         type: String
     },
     emailVerificationExpiry: {
@@ -83,7 +83,7 @@ userSchema.methods.isPasswordCorrect = async function (password) {
     return await bcrypt.compare(password, this.password)
 }
 
-userSchema.methods.genrateAccessToken = function () {
+userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
             _id: this._id,
@@ -98,7 +98,7 @@ userSchema.methods.genrateAccessToken = function () {
 }
 
 
-userSchema.methods.genrateRefressToken = function () {
+userSchema.methods.generateRefressToken = function () {
     return jwt.sign(
         {
             _id: this._id,
@@ -110,7 +110,7 @@ userSchema.methods.genrateRefressToken = function () {
     )
 }
 
-userSchema.methods.genrateTemporaryToken = function () {
+userSchema.methods.generateTemporaryToken = function () {
 
     const unHashedToken = crypto.randomBytes(20).toString("hex")
     const hashedToken = crypto.createHash("sha256").update(unHashedToken).digest("hex")
