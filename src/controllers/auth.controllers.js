@@ -62,4 +62,46 @@ const registerUser = async (req, res, next) => {
     }
 
 }
-export {registerUser}
+
+const login = async (req, res, next) => {
+
+    try {
+        const { email, password } = req.body
+
+        if (!email) {
+            throw new apiErrors(400, "Email is required")
+        }
+
+        const user = await User.findOne({ email })
+
+        if (!user) {
+            throw new apiErrors(400, "User does not exist")
+        }
+        const isPassValid = await user.isPasswordCorrect(password)
+
+        if (!isPassValid) {
+            throw new apiErrors(400, "Inavail credentials")
+        }
+        const { AccessToken, RefreshToken } = await genrateAccessTokenAndRefreshToken(user._id)
+
+        const loggedInUser = await User.findById(user._id).select("-password -refreshToken -emailVerificationToken -emailVerificationExpiry")
+
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+        return res.status(200)
+            .cookie("accessToken", AccessToken, options)
+            .cookie("refreshToken", RefreshToken, options)
+            .json(new ApiResponse(200, {
+                user: loggedInUser,
+                AccessToken
+            },
+                "User logged in successfully"
+            ))
+    } catch (error) {
+        next(error)
+    }
+}
+
+export { registerUser, login }
