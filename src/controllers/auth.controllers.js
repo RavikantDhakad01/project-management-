@@ -215,7 +215,7 @@ const refreshAccessToken = async (req, res, next) => {
             throw new apiErrors(401, "Unauthorized access")
         }
 
-        const decodedToken = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECERT)
+        const decodedToken = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET)
 
         const user = await User.findById(decodedToken._id)
         if (!user) {
@@ -226,7 +226,7 @@ const refreshAccessToken = async (req, res, next) => {
             throw new apiErrors(401, "Refresh token in expired")
         }
 
-        const { accessToken, RefreshToken: newRefreshToken } = await genrateAccessTokenAndRefreshToken(user._id)
+        const { AccessToken, RefreshToken: newRefreshToken } = await genrateAccessTokenAndRefreshToken(user._id)
 
 
         const options = {
@@ -235,7 +235,7 @@ const refreshAccessToken = async (req, res, next) => {
         }
 
         return res.status(200)
-            .cookie("accessToken", accessToken, options)
+            .cookie("accessToken", AccessToken, options)
             .cookie("refreshToken", newRefreshToken, options)
             .json(new ApiResponse(200, {
                 accessToken, refreshToken: newRefreshToken
@@ -301,14 +301,14 @@ const resetPassword = async (req, res, next) => {
         })
 
         if (!user) {
-            throw new apiErrors(489, "Token is inavaild or expired")
+            throw new apiErrors(400, "Token is inavaild or expired")
         }
         user.forgotPasswordToken = undefined
         user.forgotPasswordExpiry = undefined
 
         user.password = newPassword
 
-        user.save({ validateBeforeSave: false })
+       await user.save({ validateBeforeSave: false })
 
         return res.status(200).json(new ApiResponse(200, {}, "password reset successfully"))
 
@@ -335,7 +335,7 @@ const changePassword = async (req, res, next) => {
         }
 
         user.password = newPassword
-        user.save({ validateBeforeSave: false })
+        await user.save({ validateBeforeSave: false })
 
         return res.status(200).json(new ApiResponse(200, {}, "password changed successfully"))
 
