@@ -3,7 +3,7 @@ import ApiResponse from "../utils/Api-Response.js"
 import { apiErrors } from "../utils/Api-errors.js"
 import User from "../models/User.Model.js"
 import jwt from "jsonwebtoken"
-
+import crypto from "crypto"
 
 const genrateAccessTokenAndRefreshToken = async (userId) => {
 
@@ -55,7 +55,8 @@ const registerUser = async (req, res, next) => {
         const createdUser = await User.findById(user._id).select("-password -refreshToken -emailVerificationToken -emailVerificationExpiry")
 
         return res.status(201).json(
-            new ApiResponse(201, { user: createdUser }, "User registered successfully and verification email has been sent on your email")
+         
+            new ApiResponse(201, { user: createdUser}, "User registered successfully and verification email has been sent on your email")
         )
 
     } catch (error) {
@@ -125,7 +126,7 @@ const logoutUser = async (req, res, next) => {
         }
         res.status(200)
             .clearCookie("accessToken", options)
-            .clearCookie("accessToken", options)
+            .clearCookie("refreshToken", options)
             .json(new ApiResponse(200, {}, "User logged out"))
     } catch (error) {
         return next(error)
@@ -145,7 +146,8 @@ const verifyEmail = async (req, res, next) => {
             throw new apiErrors(400, "Email verification token is missing")
         }
 
-        let hashedToken = crypto().createHash("sha256")
+        let hashedToken = crypto
+            .createHash("sha256")
             .update(verificationToken)
             .digest("hex")
 
@@ -164,7 +166,7 @@ const verifyEmail = async (req, res, next) => {
 
         await user.save({ validateBeforeSave: false })
 
-        return res.status(200).json(200, new ApiResponse(200, { isEmailVerified: user.isEmailVerified }, "Email is verified"))
+        return res.status(200).json(new ApiResponse(200, { isEmailVerified: user.isEmailVerified }, "Email is verified"))
 
     } catch (error) {
         return next(error)
@@ -197,7 +199,7 @@ const resendEmailVerification = async (req, res, next) => {
             mailGenContent: emailVerificationMailgenContent(user.username, `${req.protocol}://${req.get("host")}/api/v1/users/verify-email/${unHashedToken}`)
         })
 
-        return res.status(200).json(200, {}, "Mail has been sent to your email ID")
+        return res.status(200).json(new ApiResponse(200, {}, "Mail has been sent to your email ID"))
 
     } catch (error) {
         return next(error)
@@ -235,10 +237,10 @@ const refreshAccessToken = async (req, res, next) => {
         return res.status(200)
             .cookie("accessToken", accessToken, options)
             .cookie("refreshToken", newRefreshToken, options)
-            .json(200, {
+            .json(new ApiResponse(200, {
                 accessToken, refreshToken: newRefreshToken
             },
-                "Access token refreshed"
+                "Access token refreshed")
             )
     } catch (error) {
         return next(error)
@@ -274,7 +276,7 @@ const forgotPasswordRequest = async (req, res, next) => {
         return res.status(200).json(new ApiResponse(200, {}, "Password reset mail has been sent on your mail id"))
 
     } catch (error) {
-        return next()
+        return next(error)
     }
 }
 
@@ -288,7 +290,7 @@ const resetPassword = async (req, res, next) => {
         if (!token) {
             throw new apiErrors(401, "Unauthorized access")
         }
-        let hashedToken = crypto()
+        let hashedToken = crypto
             .createHash("sha256")
             .update(token)
             .digest("hex")
@@ -335,7 +337,7 @@ const changePassword = async (req, res, next) => {
         user.password = newPassword
         user.save({ validateBeforeSave: false })
 
-        return res.status(200).json(200, {}, "password changed successfully")
+        return res.status(200).json(new ApiResponse(200, {}, "password changed successfully"))
 
     } catch (error) {
         return next(error)
