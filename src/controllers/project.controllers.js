@@ -25,7 +25,24 @@ const getProjectById = async (req, res, next) => {
 
 const createProject = async (req, res, next) => {
     try {
+        const { name, description } = req.body
+        const project = await Project.create({
+            name,
+            description,
+            createdBy: new mongoose.Types.ObjectId(req.user?._id)
 
+        })
+
+        if (!project) {
+            throw new apiErrors(401, "Unauthorized access")
+        }
+
+        await ProjectMember.create({
+            user: new mongoose.Types.ObjectId(req.user?._id),
+            project: new mongoose.Types.ObjectId(project._id),
+            role: UserRolesEnum.ADMIN
+        })
+        return res.status(200).json(new ApiResponse(200, project, "Project completed successfully"))
     } catch (error) {
         return next(error)
     }
