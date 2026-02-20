@@ -50,8 +50,25 @@ const createProject = async (req, res, next) => {
 
 const updateProject = async (req, res, next) => {
     try {
+        const { name, description } = req.body
+        const { projectId } = req.params
+        const updatedProject = await Project.findByIdAndUpdate(
+            projectId,
+            {
+                name,
+                description,
+            },
+            {
+                new: true
+            }
+        )
 
-    } catch (error) {
+        if (!updatedProject) {
+            throw new apiErrors(404, "Project not found")
+        }
+        return res.status(200).json(new ApiResponse(200, updatedProject, "Project updated successfully"))
+    }
+    catch (error) {
         return next(error)
     }
 }
@@ -60,7 +77,12 @@ const updateProject = async (req, res, next) => {
 
 const deleteProject = async (req, res, next) => {
     try {
-
+        const { projectId } = req.params
+        const deletedProject = await Project.findByIdAndDelete(projectId)
+        if (!deletedProject) {
+            throw new apiErrors(404, "Project not found")
+        }
+        return res.status(200, deletedProject, "Project deleted sucessfully")
     } catch (error) {
         return next(error)
     }
