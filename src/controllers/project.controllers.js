@@ -9,7 +9,61 @@ import { UserRolesEnum, AvailableUserRole } from "../utils/Constants.js"
 
 const getProjects = async (req, res, next) => {
     try {
+        const projects = await ProjectMember.aggregate([
+            {
+                $match: {
+                    user: new mongoose.Types.ObjectId(req.user._id)
+                }
+            },
+            {
+                $lookup: {
+                    from: "projects",
+                    localField: "project",
+                    foreignField: "_id",
+                    as: "projects",
+                    pipeline: [
+                        {
+                            $lookup: {
+                                from: "projectmembers",
+                                localField: "_id",
+                                foreignField: "project",
+                                as: "projectmembers"
+                            }
+                        },
+                        {
+                            $addFields: {
+                                members: {
+                                    $size: "$projectmembers"
+                                }
+                            }
+                        }
 
+                    ]
+                }
+            },
+            {
+                $unwind: "$projects"
+            },
+            {
+                $project: {
+                    _id: 0,
+                    role: 1,
+                    project: {
+                        name: 1,
+                        _id: 1,
+                        description: 1,
+                        members: 1,
+                        createdAt: 1,
+                        createdBy: 1
+                    }
+
+                }
+            }
+        ])
+
+        return res.status(200).json(
+            new ApiResponse(200, projects, "Projects fetched successfully")
+        )
     } catch (error) {
         return next(error)
     }
